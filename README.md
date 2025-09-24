@@ -125,25 +125,7 @@ curl -X POST http://127.0.0.1:8000/api/analyze/text \
 
 ---
 
-### 安全与合规
-- 代码已移除硬编码密钥，所有敏感信息仅来自环境变量
-- `.gitignore` 已忽略 `.env`；请勿将真实密钥提交到仓库
-- 若历史提交中曾包含密钥，请在公开项目前清理历史（如 `git filter-repo`），并在服务端重置令牌
-- 生产环境请将 CORS 的 `allow_origins` 收紧为你的实际域名
 
----
-
-### 部署建议
-- 生产启动示例：
-```bash
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
-```
-- 建议在反向代理（Nginx/ALB）后运行，并开启 HTTPS
-- 为外部 API 设置合理的超时与重试策略，监控错误码与限流
-- 使用系统服务或进程管理（systemd/supervisor/docker）保证高可用
-
----
 
 ### 开发说明
 - 主要依赖：`fastapi`、`uvicorn`、`requests`、`pydantic`、`python-dotenv`、`python-multipart`
