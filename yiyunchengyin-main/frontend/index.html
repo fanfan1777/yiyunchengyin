@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意韵成音 - 将情感转化为音乐</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1 class="logo">
+                <i class="fas fa-music"></i>
+                意韵成音
+            </h1>
+            <p class="tagline">让文字与图片蕴含的情感绽放出音乐的魅力</p>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 步骤指示器 -->
+            <div class="step-indicator">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">输入创意</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">优化设置</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">生成音乐</div>
+                </div>
+            </div>
+
+            <!-- 第一步：输入区域 -->
+            <section class="page-section active" id="input-page">
+                <div class="input-tabs">
+                    <button class="tab-btn active" data-tab="text">
+                        <i class="fas fa-keyboard"></i>
+                        文字描述
+                    </button>
+                    <button class="tab-btn" data-tab="image">
+                        <i class="fas fa-image"></i>
+                        图片上传
+                    </button>
+                </div>
+
+                <!-- 文字输入区域 -->
+                <div class="tab-content active" id="text-tab">
+                    <div class="input-group">
+                        <label for="text-input">描述您想要的音乐</label>
+                        <textarea 
+                            id="text-input" 
+                            placeholder="例如：一首安静的钢琴曲，适合在雨夜阅读时聆听..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+                    <button type="button" class="analyze-btn" onclick="analyzeText(event)">
+                        <i class="fas fa-magic"></i>
+                        开始分析
+                    </button>
+                </div>
+
+                <!-- 图片上传区域 -->
+                <div class="tab-content" id="image-tab">
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>拖拽图片到此处或点击上传</p>
+                            <p class="upload-hint">支持 JPG、PNG、GIF 格式，最大 10MB</p>
+                        </div>
+                        <input type="file" id="image-input" accept="image/*" hidden>
+                    </div>
+                    <div class="image-preview" id="image-preview" style="display: none;">
+                        <img id="preview-image" alt="预览图片">
+                        <button class="remove-btn" onclick="removeImage()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="analyze-btn" onclick="analyzeImage(event)" disabled id="analyze-image-btn">
+                        <i class="fas fa-magic"></i>
+                        分析图片
+                    </button>
+                </div>
+            </section>
+
+            <!-- 第二步：优化设置区域 -->
+            <section class="page-section" id="optimization-page">
+                <!-- 音乐创作引导 -->
+                <div class="understanding-card">
+                    <h3><i class="fas fa-music"></i> 音乐创作向导</h3>
+                    <div class="understanding-text" id="understanding-display"></div>
+                    <div class="music-elements-display" id="music-elements-display"></div>
+                </div>
+
+                <!-- 参数设置选择 -->
+                <div class="clarification-section" id="clarification-section">
+                    <h3><i class="fas fa-sliders-h"></i> 音乐参数设置</h3>
+                    <p class="clarification-hint">请选择音乐的具体参数，或直接跳过使用默认设置</p>
+                    <div class="questions-container" id="questions-container"></div>
+                </div>
+
+                <!-- 音乐描述 -->
+                <div class="music-description-section">
+                    <h4><i class="fas fa-edit"></i> 音乐描述</h4>
+                    <div class="input-group">
+                        <textarea 
+                            id="music-description" 
+                            placeholder="请描述您想要的音乐内容和风格..."
+                            rows="3"
+                        ></textarea>
+                        <small class="description-hint">
+                            📝 此描述将作为音乐生成的核心提示词，请尽可能详细描述您的需求
+                        </small>
+                    </div>
+                </div>
+
+                <!-- API参数设置 -->
+                <div class="api-parameters" id="api-parameters">
+                    <div class="parameters-header" onclick="toggleParameters()">
+                        <h4><i class="fas fa-sliders-h"></i> 参数设置</h4>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </div>
+                    <div class="parameters-content" id="parameters-content">
+                        <!-- 通用参数 -->
+                        <div class="option-group">
+                            <label for="duration-slider">音乐时长 (秒)</label>
+                            <div class="slider-container">
+                                <input type="range" id="duration-slider" min="30" max="240" value="30">
+                                <span class="slider-value" id="duration-value">30秒</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 有人声参数 (仅在选择有人声时显示) -->
+                        <div class="voice-parameters" id="voice-parameters" style="display: none;">
+                            <div class="option-group">
+                                <label for="voice-gender">演唱者性别</label>
+                                <select id="voice-gender">
+                                    <option value="Male">男声</option>
+                                    <option value="Female">女声</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label for="voice-timbre">音色风格</label>
+                                <select id="voice-timbre">
+                                    <option value="Warm">温暖</option>
+                                    <option value="Bright">明亮</option>
+                                    <option value="Husky">沙哑</option>
+                                    <option value="Sweet_AUDIO_TIMBRE">甜美</option>
+                                    <option value="Powerful">有力</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- BGM参数 (仅在选择纯音乐时显示) -->
+                        <div class="bgm-parameters" id="bgm-parameters" style="display: none;">
+                            <div class="option-group">
+                                <label for="bgm-instruments">主要乐器</label>
+                                <div class="instruments-grid">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" value="piano"> 钢琴
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" value="guitar"> 吉他
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" value="violin"> 小提琴
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" value="drums"> 鼓
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="page-actions">
+                    <button class="back-btn" onclick="goToStep(1)">
+                        <i class="fas fa-arrow-left"></i>
+                        返回修改
+                    </button>
+                    <button class="skip-btn" onclick="skipOptimization()">
+                        <i class="fas fa-forward"></i>
+                        跳过设置
+                    </button>
+                    <button class="continue-btn" onclick="continueToGeneration()">
+                        <i class="fas fa-arrow-right"></i>
+                        继续生成
+                    </button>
+                </div>
+            </section>
+
+            <!-- 第三步：音乐生成结果 -->
+            <section class="page-section" id="result-page">
+                <div class="result-header">
+                    <h2><i class="fas fa-music"></i> 您的专属音乐</h2>
+                    <p class="generation-time" id="generation-time"></p>
+                </div>
+
+                <!-- 音频播放器 -->
+                <div class="audio-player-card">
+                    <div class="audio-player-container">
+                        <audio controls id="audio-player" class="custom-audio-player">
+                            您的浏览器不支持音频播放。
+                        </audio>
+                        <div class="audio-controls">
+                            <button class="audio-btn" onclick="downloadMusic()">
+                                <i class="fas fa-download"></i>
+                                下载
+                            </button>
+                            <button class="audio-btn" onclick="shareMusic()">
+                                <i class="fas fa-share"></i>
+                                分享
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 歌词显示区域 -->
+                <div class="lyrics-section" id="lyrics-section" style="display: none;">
+                    <div class="lyrics-card">
+                        <h3><i class="fas fa-music"></i> 歌词</h3>
+                        <div class="lyrics-display" id="lyrics-display"></div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="page-actions">
+                    <button class="back-btn" onclick="goToStep(2)">
+                        <i class="fas fa-arrow-left"></i>
+                        调整参数
+                    </button>
+                    <button class="regenerate-btn" onclick="regenerateMusic()">
+                        <i class="fas fa-redo"></i>
+                        重新生成
+                    </button>
+                    <button class="new-btn" onclick="startNewSession()">
+                        <i class="fas fa-plus"></i>
+                        创建新音乐
+                    </button>
+                </div>
+            </section>
+
+            <!-- 会话状态 -->
+            <section class="status-section">
+                <div class="status-indicator" id="status-indicator">
+                    <span class="status-text">准备就绪</span>
+                    <div class="status-dot ready"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 加载指示器 -->
+        <div class="loading-overlay" id="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p class="loading-text">AI正在分析中...</p>
+            </div>
+        </div>
+
+        <!-- 通知区域 -->
+        <div class="notification" id="notification"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
