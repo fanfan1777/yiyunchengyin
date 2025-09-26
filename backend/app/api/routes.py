@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Body
 from fastapi.responses import JSONResponse
 from typing import Optional
 from app.models.schemas import (
@@ -9,6 +9,12 @@ from app.models.schemas import (
 from app.services.session_manager import session_manager
 from app.services.ai_service import ai_service
 from app.services.coze_music_service import coze_music_service
+from app.models.models import User
+from app.models.db import SessionLocal
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
+from passlib.hash import bcrypt
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -426,3 +432,33 @@ async def list_sessions():
                 message=f"获取会话列表失败: {str(e)}"
             ).dict()
         )
+
+@router.post("/register")
+def register(user: dict = Body(...)):
+    db: Session = SessionLocal()
+    try:
+        if db.query(User).filter(User.username == user['username']).first():
+            raise HTTPException(status_code=400, detail="用户名已存在")
+        password = user['password'][:72]  # 截断密码为72字节
+        new_user = User(
+            username=user['username'],
+            email=user['email'],
+            hashed_password=bcrypt.hash(password)
+        )
+        db.add(new_user)
+        db.commit()
+        return {"success": True, "message": "注册成功"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"注册失败: {str(e)}")
+    finally:
+        db.close()
+
+@router.post("/login")
+def login(user: dict = Body(...)):
+    db: Session = SessionLocal()
+    db_user = db.query(User).filter(User.username == user['username']).first()
+    db.close()
+    if not db_user or not bcrypt.verify(user['password'], db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+    return {"success": True, "message": "登录成功"}

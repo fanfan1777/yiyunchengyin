@@ -7,6 +7,10 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+from dotenv import load_dotenv
+
+ROOT_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = ROOT_DIR / "backend"
 
 def check_python_version():
     """检查Python版本"""
@@ -18,16 +22,16 @@ def check_python_version():
 
 def check_dependencies():
     """检查并安装依赖"""
-    requirements_file = Path("backend/requirements.txt")
+    requirements_file = BACKEND_DIR / "requirements.txt"
     if not requirements_file.exists():
-        print("❌ 错误: 找不到requirements.txt文件")
+        print(f"❌ 错误: 找不到requirements.txt文件: {requirements_file}")
         sys.exit(1)
     
     print("📦 检查依赖包...")
     try:
         result = subprocess.run([
             sys.executable, "-m", "pip", "install", "-r", str(requirements_file)
-        ], check=True, capture_output=True, text=True)
+        ], check=True, text=True)
         print("✅ 依赖包安装完成")
     except subprocess.CalledProcessError as e:
         print(f"❌ 依赖包安装失败: {e}")
@@ -35,10 +39,10 @@ def check_dependencies():
 
 def check_env_file():
     """检查环境变量文件"""
-    env_file = Path("backend/.env")
+    env_file = BACKEND_DIR / ".env"
     env_example_candidates = [
-        Path("backend/.env.example"),
-        Path("backend/env.example"),
+        BACKEND_DIR / ".env.example",
+        BACKEND_DIR / "env.example",
     ]
     
     if not env_file.exists():
@@ -59,13 +63,44 @@ def create_directories():
     # 不再创建任何本地目录，以使用在线资源
     pass
 
+def load_backend_env():
+    """显式加载 backend/.env 到当前进程环境"""
+    env_path = BACKEND_DIR / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        print("✅ 已加载 backend/.env 环境变量")
+    else:
+        print("⚠️ 未找到 backend/.env，将依赖系统环境变量")
+
+def check_database_and_migrate():
+    """检查数据库连接并创建表"""
+    try:
+        # 确保 backend 在模块搜索路径中
+        if str(BACKEND_DIR) not in sys.path:
+            sys.path.insert(0, str(BACKEND_DIR))
+        from sqlalchemy import text as sa_text
+        from app.models.db import SessionLocal, create_tables
+        # 测试连接
+        db = SessionLocal()
+        db.execute(sa_text("SELECT 1"))
+        db.close()
+        print("✅ MySQL 数据库连接成功！")
+    except Exception as e:
+        print(f"⚠️ 数据库连接检查失败: {e}")
+    try:
+        from app.models.db import create_tables
+        create_tables()
+        print("✅ 数据库表创建/校验完成")
+    except Exception as e:
+        print(f"⚠️ 创建数据库表失败: {e}")
+
 def start_server():
     """启动服务器"""
     print("🚀 启动AI音乐生成器后端服务...")
     print("=" * 50)
     
     # 切换到backend目录
-    os.chdir("backend")
+    os.chdir(str(BACKEND_DIR))
     
     try:
         subprocess.run([
@@ -93,6 +128,10 @@ def main():
     
     # 检查环境变量文件
     check_env_file()
+    # 加载环境变量
+    load_backend_env()
+    # 检查数据库并创建表
+    check_database_and_migrate()
     
     # 目录创建已移除
     # create_directories()

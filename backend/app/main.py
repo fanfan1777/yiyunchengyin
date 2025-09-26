@@ -1,12 +1,15 @@
 import os
+from dotenv import load_dotenv
+
+# 加载环境变量（提前，优先于任何依赖环境的模块导入）
+load_dotenv()
+
+from app.models.db import SessionLocal
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 from app.api.routes import router
-
-# 加载环境变量
-load_dotenv()
+from sqlalchemy import text  
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -39,7 +42,22 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", 8000))
     debug = os.getenv("DEBUG", "True").lower() == "true"
-    
+
+    # 测试数据库连接
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))  # 确保只用 text() 包裹
+        db.close()
+        print("MySQL 数据库连接成功！")
+    except Exception as e:
+        import traceback
+        print(f"数据库连接失败: {e}")
+        traceback.print_exc()
+
+    # 自动创建所有模型表
+    from app.models.db import create_tables
+    create_tables()
+
     uvicorn.run(
         "app.main:app",
         host=host,

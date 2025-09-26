@@ -11,7 +11,9 @@ load_dotenv()
 class CozeMusicService:
     def __init__(self):
         # Coze API配置 - 使用更简单的对话接口
-        self.api_url = "https://api.coze.cn/v3/chat"
+        base_url = os.getenv("COZE_API_BASE_URL", "https://api.coze.cn")
+        # 组合出需要的各接口URL
+        self.api_url = f"{base_url}/v3/chat"
         self.token = os.getenv("COZE_TOKEN")
         self.bot_id = os.getenv("COZE_BOT_ID")
         if not self.token:
@@ -416,7 +418,8 @@ class CozeMusicService:
         print(f"开始等待对话完成，Chat ID: {chat_id}")
         
         # 构建查询对话详情的URL
-        chat_detail_url = f"https://api.coze.cn/v3/chat/retrieve?chat_id={chat_id}&conversation_id={conversation_id}"
+        base_url = os.getenv("COZE_API_BASE_URL", "https://api.coze.cn")
+        chat_detail_url = f"{base_url}/v3/chat/retrieve?chat_id={chat_id}&conversation_id={conversation_id}"
         
         start_time = time.time()
         while time.time() - start_time < max_wait_time:
@@ -458,7 +461,8 @@ class CozeMusicService:
         """
         try:
             # 构建查询消息的URL
-            messages_url = f"https://api.coze.cn/v3/chat/message/list?chat_id={chat_id}&conversation_id={conversation_id}"
+            base_url = os.getenv("COZE_API_BASE_URL", "https://api.coze.cn")
+            messages_url = f"{base_url}/v3/chat/message/list?chat_id={chat_id}&conversation_id={conversation_id}"
             
             response = requests.get(messages_url, headers=self.headers)
             print(f"消息查询响应状态码: {response.status_code}")

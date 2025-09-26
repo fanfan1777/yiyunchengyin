@@ -16,7 +16,12 @@ class QwenOmniService:
         if not self.api_key:
             raise RuntimeError("DASHSCOPE_API_KEY is not set. Please configure it in your environment.")
         # 使用多模态API endpoint，支持qwen-vl-max模型
-        self.api_url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
+        self.api_url = os.getenv(
+            "DASHSCOPE_API_URL",
+            "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation",
+        )
+        # 模型名称可配置
+        self.model_name = os.getenv("DASHSCOPE_MODEL", "qwen-vl-max")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -121,7 +126,7 @@ class QwenOmniService:
             
             # 调用API - 使用DashScope格式和qwen-vl-max模型
             payload = {
-                "model": "qwen-vl-max",
+                "model": self.model_name,
                 "input": {
                     "messages": messages
                 },
@@ -768,7 +773,7 @@ class QwenOmniService:
             ]
             
             payload = {
-                "model": "qwen-vl-max",
+                "model": self.model_name,
                 "input": {
                     "messages": messages
                 },
