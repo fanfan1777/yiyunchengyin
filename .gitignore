@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
 *.so
 .venv/
 venv/
@@ -31,4 +32,5 @@ build/
 
 # Logs
 *.log
+
 
