@@ -1,138 +1,151 @@
-# yiyunchengyin
-## 意韵成音（AI 音乐生成器）
+# 意韵成音 · AI 音乐生成器（全栈项目）
 
-一个基于多模态 AI 的音乐生成小应用：
-- 文本/图片理解：调用 Qwen 多模态接口分析用户文本或图片，提取音乐元素
-- 澄清问答：根据分析结果向用户提问以细化需求，生成最终音乐提示词
-- 音乐生成：对接 Coze 的对话接口触发音乐插件生成音频，返回下载链接与可选歌词
-- 前端演示页：简洁的 Web 界面（纯静态）与后端 API 交互
+让文字与图片蕴含的情感，绽放为可感知的音乐表达。
+
+## 功能亮点
+- 多模态输入：支持文字与图片分析
+- 智能澄清：问答式完善音乐要素（风格/情绪/乐器等）
+- 可控生成：时长、音色、乐器灵活配置
+- 结果展示：播放器、歌词（可选）、下载与分享
+- 认证系统：注册、登录、路由守卫，登录态本地持久化
+- 主题样式：暗黑霓虹 + 浅霓虹变体（默认已启用）
 
 ---
 
-### 目录结构
-```text
-.
-├─ backend/
-│  ├─ app/
-│  │  ├─ api/                # FastAPI 路由
-│  │  ├─ models/             # Pydantic 模型
-│  │  ├─ services/           # 业务服务（AI、Coze、会话）
-│  │  └─ main.py             # FastAPI 应用入口
-│  ├─ requirements.txt       # 后端依赖
-│  └─ env.example            # 环境变量示例（复制为 .env 并填写）
-├─ frontend/                 # 前端静态文件（index.html / script.js / styles.css）
-├─ start_backend.py          # 一键启动后端脚本（自动检查依赖与 .env）
-└─ README.md
+## 架构与技术栈
+- 前端：Vue 3 + Vite + Vue Router
+  - 目录：`frontend-vue/`
+  - 开发端口：5173（已配置 dev 代理到后端 8000）
+- 后端：FastAPI + SQLAlchemy + passlib(bcrypt)
+  - 目录：`backend/`
+  - 运行端口：8000
+  - 数据库：MySQL（推荐）/ SQLite（自动兜底）
+  - 启动脚本：`start_backend.py`
+
+### 目录结构（关键部分）
+```
+backend/
+  app/
+    api/
+      routes.py           # API 路由（分析、澄清、生成、注册、登录等）
+    models/
+      db.py               # 数据库引擎/会话，支持 MySQL & SQLite 回退
+      models.py           # ORM 模型（User 等）
+      schemas.py          # Pydantic 模型
+    services/
+      ai_service.py       # 输入分析、提示词生成
+      coze_music_service.py# 生成音乐的第三方服务封装
+      session_manager.py  # 会话与澄清管理
+    main.py               # FastAPI app 入口
+  requirements.txt
+frontend-vue/
+  src/
+    views/                # HomeView / AuthView / AccountView
+    components/           # TopBar / AudioPlayer / Loading / Notification 等
+    assets/styles.css     # 全站主题与组件样式（暗黑霓虹 + 浅霓虹）
+    router/index.ts       # 路由与守卫（requiresAuth、guestOnly）
+    App.vue / main.ts
+  vite.config.ts          # 开发代理：/api -> 127.0.0.1:8000
+start_backend.py          # 后端一键启动脚本
 ```
 
 ---
 
-### 环境要求
+## 快速开始
+
+### 前置要求
 - Python 3.8+
-- 可访问外部网络（用于调用 DashScope 与 Coze API）
+- Node.js 18+（推荐 LTS）与 npm
+
+> 国内安装 Node 依赖建议切换镜像：
+```bash
+npm config set registry https://registry.npmmirror.com
+```
+
+### 1) 启动后端（FastAPI）
+```bash
+# 安装依赖
+python start_backend.py  # 首次执行会自动 pip install -r backend/requirements.txt
+
+# 或手动：
+# cd backend
+# pip install -r requirements.txt
+# uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+创建/配置环境变量 `backend/.env`（至少二选一）：
+```dotenv
+# 方案 A：一次性 DATABASE_URL（推荐）
+DATABASE_URL=mysql+pymysql://user:password@host:3306/dbname
+
+# 方案 B：单项变量（db.py 会拼接）
+MYSQL_USER=root
+MYSQL_PASSWORD=xxxx
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_DB=dbname
+
+# 可选
+DB_FALLBACK_TO_SQLITE=true   # MySQL 不可达时回退到 backend/app.db（默认 true）
+SQL_ECHO=false               # 打印 SQL 日志
+```
+> 首次启动会自动创建所需数据表。若 MySQL 连接失败且启用回退，将使用 `backend/app.db`（SQLite）。
+
+### 2) 启动前端（Vue 3 + Vite）
+```bash
+cd frontend-vue
+npm install
+npm run dev  # http://localhost:5173
+```
+开发模式已配置代理：所有以 `/api` 开头的请求会转发至 `http://127.0.0.1:8000`。
+
+#### 生产构建与预览
+```bash
+npm run build
+npm run preview  # 本地预览 dist，默认端口 5174
+```
+如需修改接口基地址，请使用环境变量（示例）：
+```bash
+# 前端 .env 或系统环境中设置
+VITE_API_BASE=/api   # 开发建议保持 /api（使用 Vite 代理）
+```
+生产部署时，请在网关/Nginx 将 `/api` 反向代理到后端服务。
 
 ---
 
-### 快速开始
-1) 克隆仓库并进入目录
-```bash
-# 任选其一（HTTPS / SSH）
-# git clone https://github.com/<your>/<repo>.git
-# git clone git@github.com:<your>/<repo>.git
-cd <repo>
-```
+## 前端路由与认证
+- `/auth`：合并认证页（登录/注册 Tab），未登录访问受保护页面将跳到这里
+- `/`：首页三步流程（输入 → 优化设置 → 生成结果），需登录
+- `/account`：账户中心（查看当前用户、退出），需登录
 
-2) 创建虚拟环境并安装依赖
-```bash
-python -m venv .venv
-# Windows
-.\.venv\Scripts\activate
-# macOS/Linux
-# source .venv/bin/activate
-
-pip install -r backend/requirements.txt
-```
-
-3) 配置环境变量（重要）
-- 复制 `backend/env.example` 为 `backend/.env`，并填写实际值
-```bash
-# Windows
-copy backend\env.example backend\.env
-# macOS/Linux
-# cp backend/env.example backend/.env
-```
-- 必填项：
-  - `DASHSCOPE_API_KEY`：Qwen(DashScope) API Key
-  - `COZE_TOKEN`：Coze 访问令牌
-  - `COZE_BOT_ID`：Coze 机器人 ID
-- 可选项（有默认值）：`HOST`、`PORT`、`DEBUG`、`MAX_FILE_SIZE`
-
-4) 启动后端
-```bash
-# 方式A：一键脚本（推荐）
-python start_backend.py
-
-# 方式B：手动启动
-cd backend
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-- 健康检查：`http://127.0.0.1:8000/health`
-- API 前缀：`/api`
-
-5) 打开前端
-- 直接用浏览器打开 `frontend/index.html`
-- 若需本地静态服务：
-```bash
-# 在仓库根目录启动一个简易静态服务器（任选其一）
-python -m http.server 5500
-# 或使用任意本地 Web 服务器
-```
+登录成功后会将登录态持久化到 `localStorage`。退出将清除并跳回 `/auth`。
 
 ---
 
-### API 速览（主要端点）
-- `POST /api/analyze/text`
-  - 表单字段：`text_content`，`session_id`(可选)
-- `POST /api/analyze/image`
-  - Multipart：`image` 文件，`session_id`(可选)
-- `POST /api/clarify`
-  - JSON：澄清回答，推进问题收集
-- `POST /api/generate/{session_id}`
-  - 使用当前会话的最终提示词触发音乐生成
-- `GET /api/session/{session_id}`
-  - 查询指定会话状态
-- `GET /api/sessions`
-  - 列出所有会话（调试用途）
+## 主要 API（简版）
+- POST `/api/register`（JSON）
+  - `{ username, email, password }` → `{ success, message }`
+- POST `/api/login`（JSON）
+  - `{ username, password }` → `{ success, message }`
+- POST `/api/analyze/text`（FormData）
+  - `text_content`、可选 `session_id` → `{ success, session_id, data }`
+- POST `/api/analyze/image`（FormData）
+  - `image`、可选 `session_id` → `{ success, session_id, data }`
+- POST `/api/clarify`（JSON）
+  - `{ session_id, question_id, selected_option }` → `{ success, ... }`
+- POST `/api/generate/{session_id}`（JSON）
+  - 生成参数（描述、时长、人声/乐器等）→ `{ success, data: { music_url, lyrics? } }`
 
-示例（分析文本）：
-```bash
-curl -X POST http://127.0.0.1:8000/api/analyze/text \
-  -F "text_content=来一段温柔浪漫，适合夜晚的钢琴曲"
-```
+> 返回体统一包含 `{ success, message?, data?, session_id? }`。登录失败和数据库异常均以 `success:false` 提示友好信息。
 
 ---
 
-### 环境变量说明（backend/.env）
-- `HOST`：后端监听地址，默认 `127.0.0.1`
-- `PORT`：后端端口，默认 `8000`
-- `DEBUG`：`True/False`，控制开发热重载与日志，默认 `True`
-- `MAX_FILE_SIZE`：上传图片大小上限，默认 `10485760`（10MB）
-- `DASHSCOPE_API_KEY`：DashScope API Key（必填）
-- `COZE_TOKEN`：Coze 访问令牌（必填）
-- `COZE_BOT_ID`：Coze 机器人 ID（必填）
-
-说明：后端运行时会加载 `backend/.env`（`python-dotenv`），`start_backend.py` 也支持从 `backend/env.example` 自动生成 `.env`。
+## 主题与样式
+- 默认启用「浅霓虹」：在 `App.vue` 挂载时为 `body` 添加 `theme-soft` 类
+- 如需切换为更深的霓虹主题，可移除该类或添加主题开关（在 `body.classList` 上切换）
+- 全部样式位于 `frontend-vue/src/assets/styles.css`，已抽象变量：
+  - `--primary-start / --primary-end / --primary`
+  - `--bg-gradient / --card-bg / --border / --text`
+  - `--topbar-bg / --topbar-border`
 
 ---
-
-
-
-### 开发说明
-- 主要依赖：`fastapi`、`uvicorn`、`requests`、`pydantic`、`python-dotenv`、`python-multipart`
-- 代码风格：清晰易读，
-
----
-
-### 反馈与支持
-如果你在本项目中遇到问题或希望新增功能，欢迎提 Issue 或 PR。
-
