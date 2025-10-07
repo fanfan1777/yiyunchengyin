@@ -1,4 +1,4 @@
-# 意韵成音 · AI 音乐生成器（全栈项目）
+# 意韵成音 · AI 音乐生成器
 
 让文字与图片蕴含的情感，绽放为可感知的音乐表达。
 
@@ -147,5 +147,6 @@ VITE_API_BASE=/api   # 开发建议保持 /api（使用 Vite 代理）
   - `--primary-start / --primary-end / --primary`
   - `--bg-gradient / --card-bg / --border / --text`
   - `--topbar-bg / --topbar-border`
+
 
 ---
