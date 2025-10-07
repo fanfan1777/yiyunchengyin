@@ -457,8 +457,13 @@ def register(user: dict = Body(...)):
 @router.post("/login")
 def login(user: dict = Body(...)):
     db: Session = SessionLocal()
-    db_user = db.query(User).filter(User.username == user['username']).first()
-    db.close()
-    if not db_user or not bcrypt.verify(user['password'], db_user.hashed_password):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
-    return {"success": True, "message": "登录成功"}
+    try:
+        db_user = db.query(User).filter(User.username == user['username']).first()
+        if not db_user or not bcrypt.verify(user['password'], db_user.hashed_password):
+            return {"success": False, "message": "用户名或密码错误"}
+        return {"success": True, "message": "登录成功"}
+    except Exception as e:
+        # 数据库连接异常或其它错误，返回可读信息
+        return {"success": False, "message": f"登录失败：{str(e)}"}
+    finally:
+        db.close()
