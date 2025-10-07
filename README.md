@@ -19,7 +19,7 @@
 - 后端：FastAPI + SQLAlchemy + passlib(bcrypt)
   - 目录：`backend/`
   - 运行端口：8000
-  - 数据库：MySQL（推荐）/ SQLite（自动兜底）
+  - 数据库：MySQL
   - 启动脚本：`start_backend.py`
 
 ### 目录结构（关键部分）
@@ -150,3 +150,4 @@ VITE_API_BASE=/api   # 开发建议保持 /api（使用 Vite 代理）
 
 
 ---
+
